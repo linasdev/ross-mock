@@ -10,3 +10,7 @@ readme = "README.md"
 
 [dependencies]
 ross-protocol = "2.15.0"
+
+[dependencies.embedded-hal]
+version = "0.2.7"
+features = ["unproven"]
