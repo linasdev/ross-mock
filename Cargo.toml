@@ -1,0 +1,12 @@
+[package]
+name = "ross-mock"
+version = "1.0.0"
+authors = ["Linas Nikiperavičius <linas@linasdev.com>"]
+edition = "2021"
+license-file = "LICENSE.md"
+description = "Mocking library for the Rusty Old Smart System"
+repository = "https://github.com/linasdev/ross-mock"
+readme = "README.md"
+
+[dependencies]
+ross-protocol = "2.15.0"
