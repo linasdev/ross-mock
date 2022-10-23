@@ -50,7 +50,10 @@ impl ExpectationTracker {
     }
 
     pub fn done(&mut self) {
-        assert_eq!(self.expectations.borrow().0, self.expectations.borrow().1.len());
+        assert_eq!(
+            self.expectations.borrow().0,
+            self.expectations.borrow().1.len()
+        );
     }
 }
 
@@ -67,7 +70,11 @@ impl Iterator for ExpectationTracker {
 
     fn next(&mut self) -> Option<Self::Item> {
         (*self.expectations).borrow_mut().0 += 1;
-        self.expectations.borrow().1.get(self.expectations.borrow().0 - 1).cloned()
+        self.expectations
+            .borrow()
+            .1
+            .get(self.expectations.borrow().0 - 1)
+            .cloned()
     }
 }
 
@@ -75,10 +82,15 @@ impl Interface for ExpectationTracker {
     fn try_get_packet(&mut self) -> Result<Packet, InterfaceError> {
         let expectation_option = self.next();
 
-        if let Some(Expectation::Interface(InterfaceExpectation::ReceivedPacket(packet))) = expectation_option {
+        if let Some(Expectation::Interface(InterfaceExpectation::ReceivedPacket(packet))) =
+            expectation_option
+        {
             Ok(packet)
         } else if let Some(expectation) = expectation_option {
-            panic!("Did not expect call to try_get_packet, expected: {:?}", expectation);
+            panic!(
+                "Did not expect call to try_get_packet, expected: {:?}",
+                expectation
+            );
         } else {
             panic!("Did not expect call to try_get_packet, nothing was expected")
         }
@@ -87,14 +99,19 @@ impl Interface for ExpectationTracker {
     fn try_send_packet(&mut self, packet: &Packet) -> Result<(), InterfaceError> {
         let expectation_option = self.next();
 
-        if let Some(Expectation::Interface(InterfaceExpectation::SentPacket(expected_packet))) = expectation_option {
+        if let Some(Expectation::Interface(InterfaceExpectation::SentPacket(expected_packet))) =
+            expectation_option
+        {
             assert_eq!(expected_packet.is_error, packet.is_error);
             assert_eq!(expected_packet.device_address, packet.device_address);
             assert_eq!(expected_packet.data, packet.data);
 
             Ok(())
         } else if let Some(expectation) = expectation_option {
-            panic!("Did not expect call to try_send_packet, expected: {:?}", expectation);
+            panic!(
+                "Did not expect call to try_send_packet, expected: {:?}",
+                expectation
+            );
         } else {
             panic!("Did not expect call to try_send_packet, nothing was expected");
         }
@@ -113,7 +130,10 @@ impl InputPin for ExpectationTracker {
                 InputPinExpectation::IsLow => Ok(false),
             }
         } else if let Some(expectation) = expectation_option {
-            panic!("Did not expect call to is_high, expected: {:?}", expectation);
+            panic!(
+                "Did not expect call to is_high, expected: {:?}",
+                expectation
+            );
         } else {
             panic!("Did not expect call to is_high, nothing was expected")
         }
@@ -144,7 +164,10 @@ impl OutputPin for ExpectationTracker {
         if let Some(Expectation::OutputPin(OutputPinExpectation::SetHigh)) = expectation_option {
             Ok(())
         } else if let Some(expectation) = expectation_option {
-            panic!("Did not expect call to set_high, expected: {:?}", expectation);
+            panic!(
+                "Did not expect call to set_high, expected: {:?}",
+                expectation
+            );
         } else {
             panic!("Did not expect call to set_high, nothing was expected")
         }
@@ -156,7 +179,10 @@ impl OutputPin for ExpectationTracker {
         if let Some(Expectation::OutputPin(OutputPinExpectation::SetLow)) = expectation_option {
             Ok(())
         } else if let Some(expectation) = expectation_option {
-            panic!("Did not expect call to set_low, expected: {:?}", expectation);
+            panic!(
+                "Did not expect call to set_low, expected: {:?}",
+                expectation
+            );
         } else {
             panic!("Did not expect call to set_low, nothing was expected")
         }
@@ -177,16 +203,16 @@ mod tests {
 
         expectation_tracker.try_get_packet().unwrap();
     }
-    
+
     #[test]
     fn expectation_tracker_received_packet_test() {
-        let expectations = vec![
-            Expectation::Interface(InterfaceExpectation::ReceivedPacket(Packet {
+        let expectations = vec![Expectation::Interface(
+            InterfaceExpectation::ReceivedPacket(Packet {
                 is_error: true,
                 device_address: 0x1111,
                 data: vec![0x11, 0x11, 0x11],
-            }))
-        ];
+            }),
+        )];
         let mut expectation_tracker = ExpectationTracker::new(expectations);
 
         let packet = expectation_tracker.try_get_packet().unwrap();
@@ -204,33 +230,37 @@ mod tests {
         let expectations = vec![];
         let mut expectation_tracker = ExpectationTracker::new(expectations);
 
-        expectation_tracker.try_send_packet(&Packet {
-            is_error: true,
-            device_address: 0x1111,
-            data: vec![0x11, 0x11, 0x11],
-        }).unwrap();
-    }
-    
-    #[test]
-    fn expectation_tracker_sent_packet_test() {
-        let expectations = vec![
-            Expectation::Interface(InterfaceExpectation::SentPacket(Packet {
+        expectation_tracker
+            .try_send_packet(&Packet {
                 is_error: true,
                 device_address: 0x1111,
                 data: vec![0x11, 0x11, 0x11],
-            }))
-        ];
+            })
+            .unwrap();
+    }
+
+    #[test]
+    fn expectation_tracker_sent_packet_test() {
+        let expectations = vec![Expectation::Interface(InterfaceExpectation::SentPacket(
+            Packet {
+                is_error: true,
+                device_address: 0x1111,
+                data: vec![0x11, 0x11, 0x11],
+            },
+        ))];
         let mut expectation_tracker = ExpectationTracker::new(expectations);
 
-        expectation_tracker.try_send_packet(&Packet {
-            is_error: true,
-            device_address: 0x1111,
-            data: vec![0x11, 0x11, 0x11],
-        }).unwrap();
+        expectation_tracker
+            .try_send_packet(&Packet {
+                is_error: true,
+                device_address: 0x1111,
+                data: vec![0x11, 0x11, 0x11],
+            })
+            .unwrap();
 
         expectation_tracker.done();
     }
-    
+
     #[test]
     fn expectation_tracker_interface_expectation_combination_test() {
         let expectations = vec![
@@ -252,11 +282,13 @@ mod tests {
         ];
         let mut expectation_tracker = ExpectationTracker::new(expectations);
 
-        expectation_tracker.try_send_packet(&Packet {
-            is_error: true,
-            device_address: 0x1111,
-            data: vec![0x11, 0x11, 0x11],
-        }).unwrap();
+        expectation_tracker
+            .try_send_packet(&Packet {
+                is_error: true,
+                device_address: 0x1111,
+                data: vec![0x11, 0x11, 0x11],
+            })
+            .unwrap();
 
         let packet = expectation_tracker.try_get_packet().unwrap();
 
@@ -264,11 +296,13 @@ mod tests {
         assert_eq!(packet.device_address, 0x2222);
         assert_eq!(packet.data, vec![0x22, 0x22, 0x22]);
 
-        expectation_tracker.try_send_packet(&Packet {
-            is_error: true,
-            device_address: 0x3333,
-            data: vec![0x33, 0x33, 0x33],
-        }).unwrap();
+        expectation_tracker
+            .try_send_packet(&Packet {
+                is_error: true,
+                device_address: 0x3333,
+                data: vec![0x33, 0x33, 0x33],
+            })
+            .unwrap();
 
         expectation_tracker.done();
     }
@@ -284,9 +318,7 @@ mod tests {
 
     #[test]
     fn expectation_tracker_call_to_is_high_is_high_test() {
-        let expectations = vec![
-            Expectation::InputPin(InputPinExpectation::IsHigh)
-        ];
+        let expectations = vec![Expectation::InputPin(InputPinExpectation::IsHigh)];
         let mut expectation_tracker = ExpectationTracker::new(expectations);
 
         let result = expectation_tracker.is_high().unwrap();
@@ -297,9 +329,7 @@ mod tests {
 
     #[test]
     fn expectation_tracker_call_to_is_high_is_low_test() {
-        let expectations = vec![
-            Expectation::InputPin(InputPinExpectation::IsLow)
-        ];
+        let expectations = vec![Expectation::InputPin(InputPinExpectation::IsLow)];
         let mut expectation_tracker = ExpectationTracker::new(expectations);
 
         let result = expectation_tracker.is_high().unwrap();
@@ -319,9 +349,7 @@ mod tests {
 
     #[test]
     fn expectation_tracker_call_to_is_low_is_low_test() {
-        let expectations = vec![
-            Expectation::InputPin(InputPinExpectation::IsLow)
-        ];
+        let expectations = vec![Expectation::InputPin(InputPinExpectation::IsLow)];
         let mut expectation_tracker = ExpectationTracker::new(expectations);
 
         let result = expectation_tracker.is_low().unwrap();
@@ -332,9 +360,7 @@ mod tests {
 
     #[test]
     fn expectation_tracker_call_to_is_low_is_high_test() {
-        let expectations = vec![
-            Expectation::InputPin(InputPinExpectation::IsHigh)
-        ];
+        let expectations = vec![Expectation::InputPin(InputPinExpectation::IsHigh)];
         let mut expectation_tracker = ExpectationTracker::new(expectations);
 
         let result = expectation_tracker.is_low().unwrap();
@@ -375,9 +401,7 @@ mod tests {
 
     #[test]
     fn expectation_tracker_set_high_test() {
-        let expectations = vec![
-            Expectation::OutputPin(OutputPinExpectation::SetHigh),
-        ];
+        let expectations = vec![Expectation::OutputPin(OutputPinExpectation::SetHigh)];
         let mut expectation_tracker = ExpectationTracker::new(expectations);
 
         expectation_tracker.set_high().unwrap();
@@ -395,9 +419,7 @@ mod tests {
 
     #[test]
     fn expectation_tracker_set_low_test() {
-        let expectations = vec![
-            Expectation::OutputPin(OutputPinExpectation::SetLow),
-        ];
+        let expectations = vec![Expectation::OutputPin(OutputPinExpectation::SetLow)];
         let mut expectation_tracker = ExpectationTracker::new(expectations);
 
         expectation_tracker.set_low().unwrap();
