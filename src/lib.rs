@@ -5,14 +5,12 @@ extern crate alloc;
 use alloc::rc::Rc;
 use alloc::vec::Vec;
 use core::cell::RefCell;
+use core::convert::Infallible;
 use core::fmt::Debug;
 use embedded_hal::digital::v2::{InputPin, OutputPin};
 
 use ross_protocol::interface::{Interface, InterfaceError};
 use ross_protocol::packet::Packet;
-
-#[derive(Debug)]
-pub struct Infallible;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expectation {
