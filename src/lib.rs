@@ -7,7 +7,7 @@ use alloc::vec::Vec;
 use core::cell::RefCell;
 use core::convert::Infallible;
 use core::fmt::Debug;
-use embedded_hal::digital::v2::{InputPin, OutputPin};
+use embedded_hal::digital::v2::{InputPin, OutputPin, StatefulOutputPin};
 
 use ross_protocol::interface::{Interface, InterfaceError};
 use ross_protocol::packet::Packet;
@@ -186,6 +186,16 @@ impl OutputPin for ExpectationTracker {
         } else {
             panic!("Did not expect call to set_low, nothing was expected")
         }
+    }
+}
+
+impl StatefulOutputPin for ExpectationTracker {
+    fn is_set_high(&self) -> Result<bool, Self::Error> {
+        Ok(true)
+    }
+
+    fn is_set_low(&self) -> Result<bool, Self::Error> {
+        Ok(true)
     }
 }
 
