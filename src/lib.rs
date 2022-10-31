@@ -62,7 +62,8 @@ impl ExpectationTracker {
     }
 
     pub fn mock(tracker: Rc<RefCell<ExpectationTracker>>) -> Mock {
-        Mock::new(tracker.clone(), tracker.borrow().mock_index)
+        tracker.borrow_mut().mock_index += 1;
+        Mock::new(tracker.clone(), tracker.borrow().mock_index - 1)
     }
 
     pub fn done(&mut self) {
@@ -458,5 +459,21 @@ mod tests {
         assert_eq!(result, true);
 
         tracker.borrow_mut().done();
+    }
+
+    #[test]
+    #[should_panic(expected = "Mock with index 1 cannot verify expectation with index 0")]
+    fn mismatching_expectation_and_mock_indexes_test() {
+        let tracker = ExpectationTracker::new();
+        let mock0 = ExpectationTracker::mock(tracker.clone());
+        let mock1 = ExpectationTracker::mock(tracker.clone());
+
+        ExpectationTracker::expect(
+            tracker.clone(),
+            &mock0,
+            Expectation::InputPin(InputPinExpectation::IsHigh),
+        );
+
+        mock1.is_high().unwrap();
     }
 }
